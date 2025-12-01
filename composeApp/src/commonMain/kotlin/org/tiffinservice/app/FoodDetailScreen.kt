@@ -38,63 +38,77 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
-import org.koin.compose.koinInject
-import org.tiffinservice.app.DTO.CartItem
+import org.koin.compose.viewmodel.koinViewModel
 import org.tiffinservice.app.ui.Background
 import org.tiffinservice.app.ui.TextGray
-import org.tiffinservice.app.viewmodel.CartViewModel
-import org.tiffinservice.app.viewmodel.MenuViewModel
+import org.tiffinservice.app.viewmodel.TiffinViewModel
 
 private val Primary = Color(0xFFF48C25)
 
 @Composable
-fun FoodDetailScreen (itemId: Int){
-    val navController = LocalNavController.current
-    val menuVM: MenuViewModel = koinInject()
-    val cartVM: CartViewModel = koinInject()
-    val cart by cartVM.cart.collectAsState()
+fun FoodDetailScreen(itemId: Long) {
 
-    val item = menuVM.getItemById(itemId)
+    val nav = LocalNavController.current
+    val vm = koinViewModel<TiffinViewModel>()
 
-    if (item == null) {
+    // get food entity
+    val food = vm.getFoodById(itemId)
+    val cart by vm.cart.collectAsState()
+
+    if (food == null) {
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Text("Loading item details...", color = Color.Gray)
+            Text("Loading food details...", color = Color.Gray)
         }
         return
     }
-    val quantity = cart.find { it.item.id == item.id }?.quantity ?: 0
 
-    Box(modifier = Modifier.fillMaxSize().background(Background)) {
-        Column (modifier = Modifier.fillMaxSize()) {
+    val quantity = cart.find { it.food.food_id == food.food_id }?.quantity ?: 0
 
-            // 🔙 Top bar
-            Row (
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Background)
+    ) {
+
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+
+            // 🔙 Top Bar
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.Black)
+
+                IconButton(onClick = { nav.popBackStack() }) {
+                    Icon(
+                        Icons.Default.ArrowBack,
+                        contentDescription = "Back",
+                        tint = Color.Black
+                    )
                 }
+
                 Text(
-                    item.title,
+                    food.name,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
                     modifier = Modifier.weight(1f),
                     textAlign = TextAlign.Center
                 )
-                Spacer(Modifier.size(24.dp)) // spacer to balance
+
+                Spacer(Modifier.size(24.dp))
             }
 
             // 🖼 Image
             KamelImage(
-                resource = asyncPainterResource(item.imageUrl),
-                contentDescription = item.title,
+                resource = asyncPainterResource(food.imageUrl ?: "https://picsum.photos/600"),
+                contentDescription = food.name,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(240.dp)
@@ -107,7 +121,7 @@ fun FoodDetailScreen (itemId: Int){
 
             // 🏷 Title
             Text(
-                item.title,
+                food.name,
                 fontWeight = FontWeight.Bold,
                 fontSize = 26.sp,
                 modifier = Modifier.padding(horizontal = 16.dp)
@@ -123,6 +137,7 @@ fun FoodDetailScreen (itemId: Int){
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
@@ -134,13 +149,13 @@ fun FoodDetailScreen (itemId: Int){
                     }
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        text = item.price.toInt().toString(),
+                        text = food.price.toInt().toString(),
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
 
-                // Counter exactly like HTML
+                // ➕➖ Counter UI (same as before)
                 Row(
                     modifier = Modifier
                         .background(Primary.copy(alpha = 0.2f), RoundedCornerShape(50))
@@ -148,8 +163,11 @@ fun FoodDetailScreen (itemId: Int){
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
+
                     IconButton(
-                        onClick = { cartVM.remove(CartItem(item, 1)) },
+                        onClick = {
+                            vm.removeItem(food)
+                        },
                         modifier = Modifier
                             .size(32.dp)
                             .background(Color.White, CircleShape)
@@ -166,7 +184,9 @@ fun FoodDetailScreen (itemId: Int){
                     )
 
                     IconButton(
-                        onClick = { cartVM.add(CartItem(item, 1)) },
+                        onClick = {
+                            vm.addItem(food)
+                        },
                         modifier = Modifier
                             .size(32.dp)
                             .background(Primary, CircleShape)
@@ -178,7 +198,7 @@ fun FoodDetailScreen (itemId: Int){
 
             Spacer(Modifier.height(24.dp))
 
-            // 🧾 Tabs (mocked single “Description” active)
+            // 🧾 Tabs (mocked)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -190,23 +210,26 @@ fun FoodDetailScreen (itemId: Int){
                     "Description",
                     color = Primary,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.border(
-                        BorderStroke(2.dp, Primary),
-                        RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
-                    ).padding(bottom = 8.dp)
+                    modifier = Modifier
+                        .border(
+                            BorderStroke(2.dp, Primary),
+                            RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
+                        )
+                        .padding(bottom = 8.dp)
                 )
+
                 Text("Ingredients", color = TextGray.copy(alpha = 0.6f), fontWeight = FontWeight.Bold)
             }
 
             Text(
-                text = item.description,
+                text = food.description ?: "No description available",
                 color = TextGray,
                 fontSize = 15.sp,
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
         }
 
-        // 🧡 Order Now button
+        // 🧡 Order Now Button
         Button(
             onClick = { /* place order */ },
             colors = ButtonDefaults.buttonColors(containerColor = Primary),
@@ -219,5 +242,4 @@ fun FoodDetailScreen (itemId: Int){
             Text("Order Now", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 16.sp)
         }
     }
-
 }

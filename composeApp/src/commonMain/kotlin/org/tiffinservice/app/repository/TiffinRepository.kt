@@ -31,6 +31,10 @@ class TiffinRepository {
         return newId
     }
 
+    fun getFoodById(id: Long): FoodEntity? {
+        return foods.find { it.food_id == id }
+    }
+
     fun getFoodsByRestaurant(id: Long) =
         foods.filter { it.restaurant_id == id }
 

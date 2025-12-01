@@ -92,7 +92,6 @@ kotlin {
             implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.7.1")
 
             implementation("io.insert-koin:koin-compose-viewmodel:$koinVersion")
-
         }
 
         commonTest.dependencies {

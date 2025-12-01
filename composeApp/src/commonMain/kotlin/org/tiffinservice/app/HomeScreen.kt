@@ -75,7 +75,7 @@ fun HomeScreen() {
                     quantity = qty,
                     onAdd = { vm.add(CartItem(item, 1)) },
                     onRemove = { vm.remove(CartItem(item, 1)) },
-                    onClick = { navController.navigate(FoodDetailRoute(id = item.id)) {
+                    onClick = { navController.navigate(FoodDetailRoute(id = item.id.toLong())) {
                             launchSingleTop = true
                         }
                     }

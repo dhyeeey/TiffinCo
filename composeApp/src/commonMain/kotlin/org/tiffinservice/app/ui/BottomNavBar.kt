@@ -24,27 +24,27 @@ fun BottomNavBar() {
     NavigationBar(containerColor = Color.White) {
 
         NavigationBarItem(
-            selected = currentRoute == "restaurants",
+            selected = currentRoute?.startsWith("restaurants") == true,
             onClick = {
                 navController.navigate("restaurants") {
                     launchSingleTop = true
                     restoreState = true
-                    popUpTo(navController.graph.startDestinationId) {
+                    popUpTo("restaurants") {
                         saveState = true
                     }
                 }
-                      },
+            },
             icon = {
                 Icon(
                     Icons.Default.Home,
                     contentDescription = "Home",
-                    tint = if (currentRoute == "restaurants") Color(0xFFF48C25) else Color.Gray
+                    tint = if (currentRoute?.startsWith("restaurants") == true) Color(0xFFF48C25) else Color.Gray
                 )
             },
             label = {
                 Text(
                     "Home",
-                    color = if (currentRoute == "restaurants") Color(0xFFF48C25) else Color.Gray
+                    color = if (currentRoute?.startsWith("restaurants") == true) Color(0xFFF48C25) else Color.Gray
                 )
             }
         )

@@ -27,7 +27,7 @@ val LocalNavController = compositionLocalOf<NavController> {
 }
 
 @Serializable
-data class FoodDetailRoute(val id: Int)
+data class FoodDetailRoute(val id: Long)
 
 @Serializable
 data class RestaurantFoodRoute(val restaurantId: Long)

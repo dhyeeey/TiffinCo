@@ -2,7 +2,6 @@ package org.tiffinservice.app.viewmodel
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -27,6 +26,10 @@ class TiffinViewModel(
             SampleDataProvider.insertAllSampleData(repo)
             isLoading.value = false
         }
+    }
+
+    fun getFoodById(id: Long): FoodEntity? {
+        return repo.getFoodById(id)
     }
 
     fun loadFoodsForRestaurant(id: Long) {
