@@ -24,9 +24,9 @@ fun BottomNavBar() {
     NavigationBar(containerColor = Color.White) {
 
         NavigationBarItem(
-            selected = currentRoute == "home",
+            selected = currentRoute == "restaurants",
             onClick = {
-                navController.navigate("home") {
+                navController.navigate("restaurants") {
                     launchSingleTop = true
                     restoreState = true
                     popUpTo(navController.graph.startDestinationId) {
@@ -38,34 +38,34 @@ fun BottomNavBar() {
                 Icon(
                     Icons.Default.Home,
                     contentDescription = "Home",
-                    tint = if (currentRoute == "home") Color(0xFFF48C25) else Color.Gray
+                    tint = if (currentRoute == "restaurants") Color(0xFFF48C25) else Color.Gray
                 )
             },
             label = {
                 Text(
                     "Home",
-                    color = if (currentRoute == "home") Color(0xFFF48C25) else Color.Gray
+                    color = if (currentRoute == "restaurants") Color(0xFFF48C25) else Color.Gray
                 )
             }
         )
 
-        NavigationBarItem(
-            selected = currentRoute == "orders",
-            onClick = { /* future */ },
-            icon = {
-                Icon(
-                    Icons.Default.ListAlt,
-                    contentDescription = "Orders",
-                    tint = if (currentRoute == "orders") Color(0xFFF48C25) else Color.Gray
-                )
-            },
-            label = {
-                Text(
-                    "Orders",
-                    color = if (currentRoute == "orders") Color(0xFFF48C25) else Color.Gray
-                )
-            }
-        )
+//        NavigationBarItem(
+//            selected = currentRoute == "orders",
+//            onClick = { /* future */ },
+//            icon = {
+//                Icon(
+//                    Icons.Default.ListAlt,
+//                    contentDescription = "Orders",
+//                    tint = if (currentRoute == "orders") Color(0xFFF48C25) else Color.Gray
+//                )
+//            },
+//            label = {
+//                Text(
+//                    "Orders",
+//                    color = if (currentRoute == "orders") Color(0xFFF48C25) else Color.Gray
+//                )
+//            }
+//        )
 
         NavigationBarItem(
             selected = currentRoute == "cart",

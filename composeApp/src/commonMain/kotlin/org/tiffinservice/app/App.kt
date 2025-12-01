@@ -4,7 +4,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.lightColorScheme
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
@@ -25,6 +28,9 @@ val LocalNavController = compositionLocalOf<NavController> {
 
 @Serializable
 data class FoodDetailRoute(val id: Int)
+
+@Serializable
+data class RestaurantFoodRoute(val restaurantId: Long)
 
 @Composable
 fun TiffinCoTheme(content: @Composable () -> Unit) {
@@ -61,11 +67,14 @@ fun App() {
             ) { padding ->
                 NavHost(
                     navController = navController,
-                    startDestination = "home",
+                    startDestination = "restaurants",
                     modifier = Modifier.padding(padding)
                 ) {
                     composable("home") { backStackEntry ->
                         stateHolder.SaveableStateProvider(backStackEntry.id) { HomeScreen() }
+                    }
+                    composable("restaurants") { backStackEntry ->
+                        stateHolder.SaveableStateProvider(backStackEntry.id) { RestaurantListScreen() }
                     }
                     composable("cart") { backStackEntry ->
                         stateHolder.SaveableStateProvider(backStackEntry.id) { CartScreen() }
@@ -76,6 +85,10 @@ fun App() {
                     composable<FoodDetailRoute> { backStackEntry ->
                         val route = backStackEntry.toRoute<FoodDetailRoute>()
                         FoodDetailScreen(itemId = route.id)
+                    }
+                    composable<RestaurantFoodRoute> { backStackEntry ->
+                        val r = backStackEntry.toRoute<RestaurantFoodRoute>()
+                        RestaurantFoodScreen(restaurantId = r.restaurantId)
                     }
                 }
             }

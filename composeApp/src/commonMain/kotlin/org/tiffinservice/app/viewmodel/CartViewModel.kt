@@ -15,6 +15,10 @@ class CartViewModel(
     val homeListState = LazyListState()
     private val scope = CoroutineScope(Dispatchers.Main)
 
-    fun add(item: CartItem) = scope.launch { repo.add(item) }
-    fun remove(item: CartItem) = scope.launch { repo.remove(item) }
+    fun add(item: CartItem) = scope.launch {
+        repo.add(item)
+    }
+    fun remove(item: CartItem) = scope.launch {
+        repo.remove(item)
+    }
 }

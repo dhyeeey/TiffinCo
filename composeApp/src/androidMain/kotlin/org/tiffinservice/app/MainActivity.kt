@@ -18,15 +18,10 @@ class MainActivity : ComponentActivity() {
             initKoin()
         }
 
+//        val appDatabase = createDatabase(applicationContext)
+
         setContent {
             App()
         }
     }
-}
-
-@Preview
-@Composable
-fun AppAndroidPreview() {
-//    HomeScreen().Content()
-//    App()
 }

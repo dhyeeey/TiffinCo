@@ -7,7 +7,12 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.composeHotReload)
+
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.androidx.room)
+
     kotlin("plugin.serialization") version "2.0.0"
+//    id("com.google.devtools.ksp") version "2.1.0-1.0.29" apply false
 }
 
 kotlin {
@@ -40,6 +45,8 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation("io.insert-koin:koin-android:$koinVersion") // ✅ Koin Android
             implementation("io.ktor:ktor-client-okhttp:$ktorVersion")
+
+            implementation(libs.androidx.room.sqlite.wrapper)
         }
 
         commonMain.dependencies {
@@ -50,6 +57,9 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
+
+            implementation(libs.androidx.room.runtime)
+            implementation(libs.androidx.sqlite.bundled)
 
             // ✅ Lifecycle helpers (AndroidX)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
@@ -78,6 +88,11 @@ kotlin {
 
             // ✅ Coroutines (for shared ViewModel/repo logic)
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
+
+            implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.7.1")
+
+            implementation("io.insert-koin:koin-compose-viewmodel:$koinVersion")
+
         }
 
         commonTest.dependencies {
@@ -135,6 +150,18 @@ configurations.all {
 
 dependencies {
     debugImplementation(compose.uiTooling)
+
+    add("kspAndroid", libs.androidx.room.compiler)
+    add("kspIosSimulatorArm64", libs.androidx.room.compiler)
+//    add("kspIosX64", libs.androidx.room.compiler)
+    add("kspIosArm64", libs.androidx.room.compiler)
+//    add("kspDesktop", libs.androidx.room.compiler)
+
+}
+
+room {
+    // Folder where Room will generate schema JSON files
+    schemaDirectory("$projectDir/schemas")
 }
 
 compose.desktop {

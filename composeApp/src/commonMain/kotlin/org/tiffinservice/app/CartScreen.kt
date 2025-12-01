@@ -46,8 +46,11 @@ import androidx.compose.ui.unit.sp
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
 import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import org.tiffinservice.app.DTO.CartItem
+import org.tiffinservice.app.repository.CartItemEntity
 import org.tiffinservice.app.viewmodel.CartViewModel
+import org.tiffinservice.app.viewmodel.TiffinViewModel
 
 private val Primary = Color(0xFFF48C25)
 private val BgLight = Color(0xFFF8F7F5)
@@ -59,46 +62,48 @@ private val TextDark = Color(0xFF1C140D)
 @Composable
 fun CartScreen() {
 
-    val vm: CartViewModel = koinInject()
+    val vm = koinViewModel<TiffinViewModel>()
     val cart by vm.cart.collectAsState()
 
-    val subtotal = cart.sumOf { it.item.price * it.quantity }
+    val subtotal = cart.sumOf { it.food.price * it.quantity }
     val delivery = if (subtotal < 100) 30.0 else 0.0
-    val total = subtotal + delivery
-    var address by remember { mutableStateOf("") }
-    var paymentMethod by remember { mutableStateOf("cod") }
 
-    // Simple scrollable layout
+    var address by remember { mutableStateOf("") }
+
+    // COUPON STATES
+    var couponCode by remember { mutableStateOf("") }
+    var appliedCoupon by remember { mutableStateOf<String?>(null) }
+    var discount by remember { mutableStateOf(0.0) }
+    var couponError by remember { mutableStateOf<String?>(null) }
+
+    val total = subtotal + delivery - discount
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(BgLight)
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp, vertical = 16.dp),
+            .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
 
-        // ✅ Title
-        Text(
-            "Confirm Your Order",
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
-            color = TextDark
-        )
+        // Title
+        Text("Confirm Your Order", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = TextDark)
 
-        // ✅ Items
+        // ITEMS LIST
         Text("Your Items", fontSize = 18.sp, fontWeight = FontWeight.Medium)
+
         Card(
             colors = CardDefaults.cardColors(containerColor = SurfaceLight),
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column(Modifier.padding(16.dp)) {
                 cart.forEachIndexed { index, item ->
                     CartItemRow(
                         cartItem = item,
-                        onAdd = { vm.add(item) },
-                        onRemove = { vm.remove(item) }
+                        onAdd = { vm.addItem(item.food) },
+                        onRemove = { vm.removeItem(item.food) }
                     )
                     if (index < cart.lastIndex)
                         Divider(Modifier.padding(vertical = 12.dp), color = MutedLight)
@@ -106,23 +111,107 @@ fun CartScreen() {
             }
         }
 
-        // ✅ Bill Details
+        // ⭐ COUPON SECTION
+        Text("Apply Coupon", fontSize = 18.sp, fontWeight = FontWeight.Medium)
+
+        Card(
+            colors = CardDefaults.cardColors(containerColor = SurfaceLight),
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+
+                OutlinedTextField(
+                    value = couponCode,
+                    onValueChange = {
+                        couponCode = it.uppercase()
+                        couponError = null
+                    },
+                    placeholder = { Text("Enter coupon code") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                Button(
+                    onClick = {
+                        when (couponCode.trim()) {
+                            "SAVE10" -> {
+                                appliedCoupon = "SAVE10"
+                                discount = 10.0
+                                couponError = null
+                            }
+                            "SAVE20" -> {
+                                appliedCoupon = "SAVE20"
+                                discount = 20.0
+                                couponError = null
+                            }
+                            "WELCOME50" -> {
+                                appliedCoupon = "WELCOME50"
+                                discount = 50.0
+                                couponError = null
+                            }
+                            else -> {
+                                appliedCoupon = null
+                                discount = 0.0
+                                couponError = "Invalid coupon"
+                            }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Primary)
+                ) {
+                    Text("Apply", fontWeight = FontWeight.Bold, color = Color.White)
+                }
+
+                if (couponError != null) {
+                    Text(
+                        couponError!!,
+                        color = Color.Red,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+
+                if (appliedCoupon != null) {
+                    Text(
+                        "Applied: $appliedCoupon (-₹${discount.formatFixed(2)})",
+                        color = Color(0xFF4A7A37),
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+        }
+
+        // BILL DETAILS
         Text("Bill Details", fontSize = 18.sp, fontWeight = FontWeight.Medium)
+
         Card(
             colors = CardDefaults.cardColors(containerColor = SurfaceLight),
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(Modifier.padding(16.dp)) {
+
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text("Subtotal", color = SubtleLight)
                     Text("₹${subtotal.formatFixed(2)}", color = SubtleLight)
                 }
+
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text("Delivery Fee", color = SubtleLight)
                     Text("₹${delivery.formatFixed(2)}", color = SubtleLight)
                 }
+
+                if (discount > 0) {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("Discount", color = Color(0xFF4A7A37))
+                        Text("-₹${discount.formatFixed(2)}", color = Color(0xFF4A7A37))
+                    }
+                }
+
                 Divider(Modifier.padding(vertical = 8.dp), color = MutedLight)
+
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text("Total Amount", fontWeight = FontWeight.Bold)
                     Text("₹${total.formatFixed(2)}", fontWeight = FontWeight.Bold)
@@ -130,43 +219,20 @@ fun CartScreen() {
             }
         }
 
-        // ✅ Address
+        // ADDRESS
         Text("Deliver To", fontSize = 18.sp, fontWeight = FontWeight.Medium)
+
         OutlinedTextField(
             value = address,
             onValueChange = { address = it },
-            placeholder = { Text("Enter your full address, including flat number") },
+            placeholder = { Text("Enter your full address") },
             modifier = Modifier
                 .fillMaxWidth()
                 .defaultMinSize(minHeight = 100.dp),
             shape = RoundedCornerShape(12.dp)
         )
 
-        // ✅ Payment Methods
-        Text("Choose Payment Method", fontSize = 18.sp, fontWeight = FontWeight.Medium)
-        Card(
-            colors = CardDefaults.cardColors(containerColor = SurfaceLight),
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                PaymentOption(
-                    title = "Cash on Delivery",
-                    subtitle = "Pay with cash at your doorstep.",
-                    selected = paymentMethod == "cod",
-                    onSelect = { paymentMethod = "cod" }
-                )
-                Divider(color = MutedLight)
-                PaymentOption(
-                    title = "UPI (Manual)",
-                    subtitle = "UPI ID will be shown on the next screen.",
-                    selected = paymentMethod == "upi",
-                    onSelect = { paymentMethod = "upi" }
-                )
-            }
-        }
-
-        // ✅ Place Order Button (scrolls naturally)
+        // PLACE ORDER BUTTON
         Button(
             onClick = { /* handle order */ },
             modifier = Modifier
@@ -178,67 +244,47 @@ fun CartScreen() {
             Text("Place Order | ₹${total.toInt()}", fontSize = 18.sp, color = Color.White)
         }
 
-        Spacer(Modifier.height(24.dp)) // bottom padding
+        Spacer(Modifier.height(24.dp))
     }
 }
 
 @Composable
-fun CartItemRow(cartItem: CartItem, onAdd: () -> Unit, onRemove: () -> Unit) {
+fun CartItemRow(cartItem: CartItemEntity, onAdd: () -> Unit, onRemove: () -> Unit) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
 
-        // 🖼️ Left Section — Image + Text
         Row(
             modifier = Modifier.weight(1f),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Image
-            KamelImage(
-                resource = asyncPainterResource(cartItem.item.imageUrl),
-                contentDescription = cartItem.item.title,
-                modifier = Modifier
-                    .size(56.dp)
-                    .clip(RoundedCornerShape(8.dp)),
-                contentScale = ContentScale.Crop
-            )
+            cartItem.food.imageUrl?.let {
+                KamelImage(
+                    resource = asyncPainterResource(it),
+                    contentDescription = cartItem.food.name,
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clip(RoundedCornerShape(8.dp)),
+                    contentScale = ContentScale.Crop
+                )
+            }
 
-            // Title + Price
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    cartItem.item.title,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 15.sp,
-                    maxLines = 1,
-                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                )
-                Text(
-                    "₹${cartItem.item.price}",
-                    color = Color(0xFF9C7349),
-                    fontSize = 13.sp
-                )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(cartItem.food.name, fontWeight = FontWeight.Medium, fontSize = 15.sp)
+                Text("₹${cartItem.food.price}", color = SubtleLight, fontSize = 13.sp)
             }
         }
 
-        // ➕➖ Right Section — Quantity Controls
         Row(
             modifier = Modifier.width(IntrinsicSize.Min),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             SmallCircleButton("-", onClick = onRemove)
-            Text(
-                "${cartItem.quantity}",
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.widthIn(min = 20.dp)
-            )
+            Text("${cartItem.quantity}", fontWeight = FontWeight.Medium)
             SmallCircleButton("+", onClick = onAdd)
         }
     }
@@ -255,22 +301,5 @@ fun SmallCircleButton(text: String, onClick: () -> Unit) {
         contentAlignment = Alignment.Center
     ) {
         Text(text, fontWeight = FontWeight.Medium)
-    }
-}
-
-@Composable
-fun PaymentOption(title: String, subtitle: String, selected: Boolean, onSelect: () -> Unit) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onSelect() }
-    ) {
-        RadioButton(selected = selected, onClick = onSelect, colors = RadioButtonDefaults.colors(selectedColor = Primary))
-        Column {
-            Text(title, fontWeight = FontWeight.Medium)
-            Text(subtitle, color = SubtleLight, fontSize = 12.sp)
-        }
     }
 }
