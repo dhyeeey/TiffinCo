@@ -24,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
+import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 import org.tiffinservice.app.database.FoodEntity
 import org.tiffinservice.app.repository.CartItemEntity
@@ -58,7 +60,6 @@ fun FoodItemCard(
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Column {
-
             KamelImage(
                 resource = asyncPainterResource(food.imageUrl ?: "https://picsum.photos/600"),
                 contentDescription = food.name,
@@ -128,13 +129,24 @@ fun RestaurantFoodScreen(restaurantId: Long) {
     val vm = koinViewModel<TiffinViewModel>()
 
     // Observe state
-    val foods by vm.foods
+    val foods by vm.foods.collectAsState()
     val cart by vm.cart.collectAsState()
+
+    val coroutineScope = rememberCoroutineScope()
 
     // load foods on screen load
     LaunchedEffect(restaurantId) {
-        vm.loadFoodsForRestaurant(restaurantId)
+        println("Restaturant id from screen : $restaurantId")
+        coroutineScope.launch {
+            vm.fetchFoodsForRestaurant(restaurantId)
+        }
     }
+
+//    LaunchedEffect(restaurantId) {
+//        vm.observeFoods(restaurantId)
+//
+//        println(foods)
+//    }
 
     // Wrap the content in a Box to allow for alignment
     Box(
@@ -159,10 +171,18 @@ fun RestaurantFoodScreen(restaurantId: Long) {
                 FoodItemCard(
                     food = food,
                     quantity = quantity,
-                    onAdd = { vm.addItem(CartItemEntity(food, 1)) },
-                    onRemove = { vm.removeItem(CartItemEntity(food, 1)) },
+                    onAdd = {
+                        coroutineScope.launch {
+                            vm.addItem(CartItemEntity(food, 1))
+                        }
+                    },
+                    onRemove = {
+                        coroutineScope.launch {
+                            vm.removeItem(CartItemEntity(food, 1))
+                        }
+                               },
                     onClick = {
-                        // nav.navigate(FoodDetailRoute(id = food.food_id.toInt()))
+                         nav.navigate(FoodDetailRoute(id = food.food_id))
                     }
                 )
             }

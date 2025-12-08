@@ -183,14 +183,10 @@ fun RestaurantListScreen(
     val nav = LocalNavController.current
     val viewModel = koinViewModel<TiffinViewModel>()
 
-    LaunchedEffect(Unit) {
-        viewModel.loadSampleData()
-    }
-
     val cart by viewModel.cart.collectAsState()
 
     val isLoading = viewModel.isLoading.value
-    val restaurants = viewModel.restaurants
+    val restaurants = viewModel.restaurants.value
 
     if (isLoading) {
         // Centered loading animation

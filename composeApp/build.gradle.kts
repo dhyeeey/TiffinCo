@@ -66,6 +66,11 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(libs.material.icons.extended)
 
+            // DataStore library
+            implementation("androidx.datastore:datastore:1.2.0")
+            // The Preferences DataStore library
+            implementation("androidx.datastore:datastore-preferences:1.2.0")
+
             // ✅ Voyager Navigation
             implementation("cafe.adriel.voyager:voyager-navigator:$voyagerVersion")
             implementation("cafe.adriel.voyager:voyager-screenmodel:$voyagerVersion")
@@ -140,12 +145,12 @@ android {
     }
 }
 
-configurations.all {
-    resolutionStrategy {
-        force("androidx.core:core-ktx:1.15.0")
-        force("androidx.core:core:1.15.0")
-    }
-}
+//configurations.all {
+//    resolutionStrategy {
+//        force("androidx.core:core-ktx:1.15.0")
+//        force("androidx.core:core:1.15.0")
+//    }
+//}
 
 dependencies {
     debugImplementation(compose.uiTooling)

@@ -4,10 +4,10 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
+import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.GlobalContext
-import org.tiffinservice.app.di.initKoin
+import org.koin.core.context.startKoin
+import org.tiffinservice.app.di.appModule
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -15,10 +15,16 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         // ✅ Prevent "Koin already started" crash
         if (GlobalContext.getOrNull() == null) {
-            initKoin()
+//            initKoin()
+            startKoin {
+                androidContext(applicationContext)
+                modules(
+                    listOf(androidModule,appModule)
+                )
+            }
         }
 
-//        val appDatabase = createDatabase(applicationContext)
+//        createDataStore(applicationContext)
 
         setContent {
             App()

@@ -25,8 +25,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
+import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 import org.tiffinservice.app.ui.Background
 import org.tiffinservice.app.ui.TextGray
@@ -51,8 +54,16 @@ fun FoodDetailScreen(itemId: Long) {
     val nav = LocalNavController.current
     val vm = koinViewModel<TiffinViewModel>()
 
+    val coroutineScope = rememberCoroutineScope()
+
     // get food entity
-    val food = vm.getFoodById(itemId)
+    LaunchedEffect(itemId) {
+        coroutineScope.launch {
+            vm.loadFood(itemId)
+        }
+    }
+
+    val food = vm.selectedFood.value
     val cart by vm.cart.collectAsState()
 
     if (food == null) {
@@ -166,7 +177,9 @@ fun FoodDetailScreen(itemId: Long) {
 
                     IconButton(
                         onClick = {
-                            vm.removeItem(food)
+                            coroutineScope.launch {
+                                vm.removeItem(food)
+                            }
                         },
                         modifier = Modifier
                             .size(32.dp)
@@ -185,7 +198,9 @@ fun FoodDetailScreen(itemId: Long) {
 
                     IconButton(
                         onClick = {
-                            vm.addItem(food)
+                            coroutineScope.launch {
+                                vm.addItem(food)
+                            }
                         },
                         modifier = Modifier
                             .size(32.dp)

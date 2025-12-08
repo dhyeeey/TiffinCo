@@ -8,7 +8,9 @@ import org.tiffinservice.app.di.appModule
 
 fun MainViewController() = ComposeUIViewController {
     runCatching {
-        startKoin { modules(appModule) }
+        startKoin {
+            modules(appModule)
+        }
     }.onFailure {
         // Ignore "already started" exceptions
     }

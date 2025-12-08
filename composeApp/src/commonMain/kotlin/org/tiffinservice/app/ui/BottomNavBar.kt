@@ -1,7 +1,6 @@
 package org.tiffinservice.app.ui
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.ListAlt
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Icon
@@ -11,108 +10,74 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import org.tiffinservice.app.LocalNavController
+import org.tiffinservice.app.ROUTE_CART_ROOT
+import org.tiffinservice.app.ROUTE_PROFILE_ROOT
+import org.tiffinservice.app.ROUTE_RESTAURANTS_ROOT
+
+
+private data class BottomNavItem(
+    val rootRoute: String,
+    val label: String,
+    val icon: androidx.compose.ui.graphics.vector.ImageVector,
+)
+
+private val navItems = listOf(
+    BottomNavItem(ROUTE_RESTAURANTS_ROOT, "Home", Icons.Default.Home),
+    BottomNavItem(ROUTE_CART_ROOT, "Cart", Icons.Default.ShoppingCart),
+    BottomNavItem(ROUTE_PROFILE_ROOT, "Profile", Icons.Default.Person)
+)
 
 @Composable
 fun BottomNavBar() {
 
     val navController = LocalNavController.current
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
+    val currentDestination = navBackStackEntry?.destination
 
     NavigationBar(containerColor = Color.White) {
 
-        NavigationBarItem(
-            selected = currentRoute?.startsWith("restaurants") == true,
-            onClick = {
-                navController.navigate("restaurants") {
-                    launchSingleTop = true
-                    restoreState = true
-                    popUpTo("restaurants") {
-                        saveState = true
+        navItems.forEach { item ->
+
+            val selected = currentDestination
+                ?.hierarchy
+                ?.any { it.route == item.rootRoute } == true
+
+            val active = Color(0xFFF48C25)
+            val inactive = Color.Gray
+
+            NavigationBarItem(
+                selected = selected,
+                onClick = {
+                    navController.navigate(item.rootRoute) {
+
+                        // 🔥 Proper safe backstack handling
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            inclusive = false
+                            saveState = true
+                        }
+
+                        restoreState = true
+                        launchSingleTop = true
                     }
+                },
+                icon = {
+                    Icon(
+                        item.icon,
+                        contentDescription = item.label,
+                        tint = if (selected) active else inactive
+                    )
+                },
+                label = {
+                    Text(
+                        item.label,
+                        color = if (selected) active else inactive
+                    )
                 }
-            },
-            icon = {
-                Icon(
-                    Icons.Default.Home,
-                    contentDescription = "Home",
-                    tint = if (currentRoute?.startsWith("restaurants") == true) Color(0xFFF48C25) else Color.Gray
-                )
-            },
-            label = {
-                Text(
-                    "Home",
-                    color = if (currentRoute?.startsWith("restaurants") == true) Color(0xFFF48C25) else Color.Gray
-                )
-            }
-        )
-
-//        NavigationBarItem(
-//            selected = currentRoute == "orders",
-//            onClick = { /* future */ },
-//            icon = {
-//                Icon(
-//                    Icons.Default.ListAlt,
-//                    contentDescription = "Orders",
-//                    tint = if (currentRoute == "orders") Color(0xFFF48C25) else Color.Gray
-//                )
-//            },
-//            label = {
-//                Text(
-//                    "Orders",
-//                    color = if (currentRoute == "orders") Color(0xFFF48C25) else Color.Gray
-//                )
-//            }
-//        )
-
-        NavigationBarItem(
-            selected = currentRoute == "cart",
-            onClick = { navController.navigate("cart"){
-                launchSingleTop = true
-                restoreState = true
-                popUpTo(navController.graph.startDestinationId) {
-                    saveState = true
-                }
-            } },
-            icon = {
-                Icon(
-                    Icons.Default.ShoppingCart,
-                    contentDescription = "Cart",
-                    tint = if (currentRoute == "cart") Color(0xFFF48C25) else Color.Gray
-                )
-            },
-            label = {
-                Text(
-                    "Cart",
-                    color = if (currentRoute == "cart") Color(0xFFF48C25) else Color.Gray
-                )
-            }
-        )
-
-        NavigationBarItem(
-            selected = currentRoute == "profile",
-            onClick = { navController.navigate("profile"){
-                launchSingleTop = true
-                restoreState = true
-                popUpTo(navController.graph.startDestinationId) {
-                    saveState = true
-                }
-            } },
-            icon = {
-                Icon(
-                    Icons.Default.Person,
-                    contentDescription = "Profile",
-                    tint = if (currentRoute == "profile") Color(0xFFF48C25) else Color.Gray
-                )
-            },
-            label = {
-                Text(
-                    "Profile",
-                    color = if (currentRoute == "profile") Color(0xFFF48C25) else Color.Gray
-                )
-            }
-        )
+            )
+        }
     }
 }

@@ -370,19 +370,49 @@ object SampleDataProvider {
         )
     )
 
-    suspend fun insertAllSampleData(repo: TiffinRepository) {
-        val restaurantIds = restaurants.map { repo.insertRestaurant(it) }
+//    suspend fun insertAllSampleData(repo: TiffinRepository) {
+//
+//        val restaurantIds = repo.insertAllRestaurants(restaurants)
+//
+//        // Logic ensures 5 foods are assigned to each tiffin service
+//        foods.chunked(5).forEachIndexed { index, group ->
+//            // Use 'getOrNull' to prevent crashes if math is slightly off
+//            val restaurantId = restaurantIds.getOrNull(index) ?: return@forEachIndexed
+//
+//            group.forEach { seed ->
+//                repo.insertFood(
+//                    FoodEntity(
+//                        food_id = seed.foodId,
+//                        restaurant_id = restaurantId,
+//                        name = seed.name,
+//                        description = seed.description,
+//                        category = seed.category,
+//                        price = seed.price,
+//                        imageUrl = seed.imageUrl,
+//                        rating = Random.nextDouble(3.8, 4.9)
+//                    )
+//                )
+//            }
+//        }
+//    }
 
-        // Logic ensures 5 foods are assigned to each tiffin service
+    suspend fun insertAllSampleData(repo: TiffinRepository) {
+
+        repo.insertAllRestaurants(restaurants)
+
+        val savedRestaurants = repo.getAllRestaurants()
+
+        if (savedRestaurants.isEmpty()) return
+
         foods.chunked(5).forEachIndexed { index, group ->
-            // Use 'getOrNull' to prevent crashes if math is slightly off
-            val restaurantId = restaurantIds.getOrNull(index) ?: return@forEachIndexed
+
+            val restaurant = savedRestaurants.getOrNull(index) ?: return@forEachIndexed
 
             group.forEach { seed ->
+
                 repo.insertFood(
                     FoodEntity(
-                        food_id = seed.foodId,
-                        restaurant_id = restaurantId,
+                        restaurant_id = restaurant.restaurant_id,
                         name = seed.name,
                         description = seed.description,
                         category = seed.category,
@@ -394,6 +424,7 @@ object SampleDataProvider {
             }
         }
     }
+
 }
 
 
