@@ -104,6 +104,8 @@ fun ProfileScreen() {
     var postal by remember { mutableStateOf(userProfile.address.postalCode) }
     var landmark by remember { mutableStateOf(userProfile.address.landmark) }
 
+    val nav = LocalNavController.current;
+
     LaunchedEffect(showSheet) {
         if (showSheet) {
             street = userProfile.address.street
@@ -210,12 +212,16 @@ fun ProfileScreen() {
 
 
             // ORDER HISTORY
-            StaticRow(Icons.Default.ReceiptLong, "Order History") {}
+            StaticRow(Icons.Default.ReceiptLong, "Order History", onClick = {
+                  nav.navigate(OrderHistoryRoute)
+            })
 
             Spacer(Modifier.height(16.dp))
 
             // HELP
-            StaticRow(Icons.Default.HelpOutline, "Help & Support") {}
+            StaticRow(Icons.Default.HelpOutline, "Help & Support", onClick = {
+                nav.navigate(HelpAndSupportRoute)
+            })
 
             Spacer(Modifier.height(24.dp))
 

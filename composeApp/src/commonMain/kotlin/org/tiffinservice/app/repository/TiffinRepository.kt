@@ -10,6 +10,7 @@ import org.tiffinservice.app.database.OrderDao
 import org.tiffinservice.app.database.OrderEntity
 import org.tiffinservice.app.database.OrderItemEntity
 import org.tiffinservice.app.database.OrderWithDetails
+import org.tiffinservice.app.database.OrderWithItems
 import org.tiffinservice.app.database.RestaurantDao
 import org.tiffinservice.app.database.RestaurantEntity
 
@@ -105,6 +106,27 @@ class TiffinRepository(
         restaurantDao.countRestaurants()
 
 
+    suspend fun getOrders(): List<OrderWithItems> {
+        return orderDao.getOrders()
+    }
+
+    suspend fun getOrderDetails(orderId: Long): OrderWithDetails? {
+        val order = orderDao.getOrder(orderId) ?: return null
+
+        val foodIds = order.items.map { it.foodId }
+        val foods = foodDao.getFoodsByIds(foodIds)
+
+        return OrderWithDetails(
+            order = order.order,
+            items = order.items,
+            foods = foods
+        )
+    }
+
+    suspend fun updateOrderStatus(orderId: Long, status: String) {
+        orderDao.updateStatus(orderId, status)
+    }
+
     // ===== FOOD DB calls =====
 
     suspend fun insertFood(food: FoodEntity) =
@@ -127,20 +149,6 @@ class TiffinRepository(
 
     fun clearCart(){
         _cart.value = emptyList()
-    }
-
-    suspend fun getOrderDetails(orderId: Long): OrderWithDetails? {
-        val order = orderDao.getOrder(orderId) ?: return null
-
-        val foodIds = order.items.map { it.foodId }
-
-        val foods = foodDao.getFoodsByIds(foodIds)
-
-        return OrderWithDetails(
-            order = order.order,
-            items = order.items,
-            foods = foods
-        )
     }
 
     suspend fun placeOrder(currentDiscount : Double, userProfile: UserProfile): Long {

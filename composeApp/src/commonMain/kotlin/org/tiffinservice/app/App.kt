@@ -69,6 +69,14 @@ data class RestaurantFoodRoute(val restaurantId: Long)
 @Serializable
 data class OrderPlacedRoute(val orderId: Long)
 
+@Serializable
+object OrderHistoryRoute
+
+
+@Serializable
+object HelpAndSupportRoute
+
+
 // ========= Theme =========
 
 @Composable
@@ -211,6 +219,14 @@ fun App() {
                                 composable<FoodDetailRoute> { backStackEntry ->
                                     val r = backStackEntry.toRoute<FoodDetailRoute>()
                                     FoodDetailScreen(itemId = r.id)
+                                }
+
+                                composable<OrderHistoryRoute> {
+                                    OrderHistoryScreen()
+                                }
+
+                                composable<HelpAndSupportRoute> {
+                                    HelpAndSupportScreen()
                                 }
                             }
 

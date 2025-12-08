@@ -6,10 +6,14 @@ import androidx.lifecycle.viewModelScope
 import io.ktor.util.logging.Logger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.tiffinservice.app.UserProfile
 import org.tiffinservice.app.database.FoodEntity
 import org.tiffinservice.app.database.OrderItemEntity
+import org.tiffinservice.app.database.OrderWithDetails
+import org.tiffinservice.app.database.OrderWithItems
 import org.tiffinservice.app.database.RestaurantEntity
 import org.tiffinservice.app.repository.CartItemEntity
 import org.tiffinservice.app.repository.TiffinRepository
@@ -75,6 +79,13 @@ class TiffinViewModel(
         loadInitialData()
     }
 
+    private val _orders = MutableStateFlow<List<OrderWithItems>?>(null)
+    val orders: StateFlow<List<OrderWithItems>?> = _orders.asStateFlow()
+
+    fun loadOrders() = viewModelScope.launch {
+        _orders.value = repo.getOrders()
+    }
+
     suspend fun placeOrder(currentDiscount : Double, userProfile: UserProfile): Long {
         return repo.placeOrder(currentDiscount, userProfile);
     }
@@ -88,6 +99,8 @@ class TiffinViewModel(
 
         println("Restaurant id : $restaurantId")
     }
+
+    suspend fun getOrderDetails(orderId: Long): OrderWithDetails? = repo.getOrderDetails(orderId)
 
     private fun loadInitialData() = viewModelScope.launch {
         // Seed database if empty
